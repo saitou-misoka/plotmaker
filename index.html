@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロット錬成アプリ</title>
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23fa8072'/><text x='50%25' y='55%25' font-family='sans-serif' font-size='100' text-anchor='middle' dominant-baseline='middle'>📝</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <style>
+        :root {
+            --primary: #fa8072; /* サーモンコーラル色 */
+            --bg: #1e222b;      /* 目が疲れないダークモード背景 */
+            --card: #282c34;    /* カード背景 */
+            --text: #ffffff;    /* メイン文字色（白） */
+            --text-muted: #abb2bf;
+            --border: #3e4451;
+            --accent-star: #ffd700;
+            --accent-heart: #ff7675;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+        }
+        h2 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            padding-left: 8px;
+        }
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        button {
+            padding: 10px 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #e06e61;
+        }
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+        }
+        .btn-block {
+            padding: 12px;
+            font-size: 1.1rem;
+        }
+        .btn-secondary {
+            background-color: #4b5263;
+        }
+        .btn-secondary:hover {
+            background-color: #3e4451;
+        }
+        .btn-danger {
+            background-color: #ff7675;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        .btn-danger:hover {
+            background-color: #e06362;
+        }
+        /* 1階部分：構成エリア */
+        .chapter-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .chapter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .chapter-title {
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--primary);
+        }
+        .input-inline {
+            display: inline-block;
+            width: 120px;
+            padding: 6px;
+            font-size: 0.9rem;
+        }
+        /* 2階部分：要素エリア */
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+        .checkbox-label input {
+            width: auto;
+            cursor: pointer;
+        }
+        .element-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .element-content {
+            flex-grow: 1;
+            margin-right: 10px;
+            font-size: 0.95rem;
+        }
+        .element-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .element-actions select {
+            width: 110px;
+            padding: 4px;
+            font-size: 0.85rem;
+        }
+        .order-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+        .order-btn:hover {
+            background: var(--border);
+            color: white;
+        }
+        .tag-star { color: var(--accent-star); font-weight: bold; }
+        .tag-heart { color: var(--accent-heart); font-weight: bold; }
+        
+        /* 3階部分：出力エリア */
+        .output-area {
+            width: 100%;
+            height: 250px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            background-color: #15181f;
+            color: #8da1b9;
+        }
+        .custom-input-zone {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📝 プロット錬成アプリ</h1>
+
+    <div class="card">
+        <h2>1階：構成と想定文字数の設定</h2>
+        <div class="form-group">
+            <label>構成テンプレート</label>
+            <select id="structure-type" onchange="handleStructureChange()">
+                <option value="起承転結">起承転結</option>
+                <option value="序破急">序破急</option>
+                <option value="カスタム">カスタム（自由設定）</option>
+            </select>
+        </div>
+
+        <div id="custom-controls" style="display: none;" class="form-group">
+            <label>カスタム幕の追加</label>
+            <div class="custom-input-zone">
+                <input type="text" id="new-chapter-name" placeholder="例: 5コマ目、プロローグなど">
+                <button type="button" onclick="addCustomChapter()">枠を追加</button>
+            </div>
+        </div>
+
+        <div id="chapters-container">
+            </div>
+    </div>
+
+    <div class="card">
+        <h2>2階：要素の平打ちと配置・順序入れ替え</h2>
+        <div class="form-group">
+            <label>要素の内容（シーン・セリフ・メモなど）</label>
+            <input type="text" id="element-text" placeholder="思いついたことを平打ちしてください">
+            
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="is-star"> <span class="tag-star">⭐ 盛り上がるシーン</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="is-heart"> <span class="tag-heart">♡ 一番書きたい要素</span>
+                </label>
+            </div>
+            <button type="button" onclick="addElement()" style="margin-top: 5px;">要素を追加</button>
+        </div>
+
+        <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+        <label>投入された要素のリストと整理</label>
+        <div id="elements-list">
+            </div>
+    </div>
+
+    <div class="card">
+        <h2>3階：プロット錬成</h2>
+        <div class="action-buttons">
+            <button class="button btn-block" onclick="generatePlot()">🚀 プロット錬成</button>
+            <button class="button btn-block btn-secondary" onclick="downloadPlotText()">💾 保存</button>
+        </div>
+        
+        <div class="form-group" style="margin-top: 20px;">
+            <label>錬成結果（そのままコピペ可能です）</label>
+            <textarea id="plot-output" class="output-area" readonly placeholder="ボタンを押すとここにプロットが書き出されます"></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    let chapters = []; 
+    let elements = []; 
+
+    initApp();
+
+    function initApp() {
+        handleStructureChange();
+    }
+
+    // 構成選択が変更されたときの処理を修正
+    function handleStructureChange() {
+        const type = document.getElementById('structure-type').value;
+        const customControls = document.getElementById('custom-controls');
+        
+        if (type === '起承転結') {
+            customControls.style.display = 'none';
+            chapters = [
+                { id: 'ch_1', name: '起', chars: '' },
+                { id: 'ch_2', name: '承', chars: '' },
+                { id: 'ch_3', name: '転', chars: '' },
+                { id: 'ch_4', name: '結', chars: '' }
+            ];
+        } else if (type === '序破急') {
+            customControls.style.display = 'none';
+            chapters = [
+                { id: 'ch_1', name: '序', chars: '' },
+                { id: 'ch_2', name: '破', chars: '' },
+                { id: 'ch_3', name: '急', chars: '' }
+            ];
+        } else {
+            // カスタムを選んだら、すでにある枠をリセットして0個にする
+            customControls.style.display = 'flex';
+            chapters = [];
+        }
+
+        // 枠の消滅に合わせて、要素側の割り当て（chapterId）をリセットして「未分類」に戻す
+        elements.forEach(el => {
+            const exists = chapters.some(ch => ch.id === el.chapterId);
+            if (!exists) el.chapterId = '';
+        });
+
+        renderChapters();
+        renderElements(); 
+    }
+
+    function addCustomChapter() {
+        const input = document.getElementById('new-chapter-name');
+        const name = input.value.trim();
+        if (!name) {
+            alert('枠の名前を入力してください！');
+            return;
+        }
+        const id = 'ch_' + Date.now();
+        chapters.push({ id, name, chars: '' });
+        input.value = '';
+        renderChapters();
+        renderElements();
+    }
+
+    function deleteChapter(id) {
+        chapters = chapters.filter(ch => ch.id !== id);
+        elements.forEach(el => {
+            if (el.chapterId === id) el.chapterId = '';
+        });
+        renderChapters();
+        renderElements();
+    }
+
+    function updateCharCount(id, value) {
+        const ch = chapters.find(c => c.id === id);
+        if (ch) ch.chars = value;
+    }
+
+    function renderChapters() {
+        const container = document.getElementById('chapters-container');
+        container.innerHTML = '';
+        const type = document.getElementById('structure-type').value;
+
+        if (chapters.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-top: 15px;">枠がありません。上の「枠を追加」から好きな箱を作ってください。</p>';
+            return;
+        }
+
+        chapters.forEach(ch => {
+            const box = document.createElement('div');
+            box.className = 'chapter-box';
+            
+            let deleteBtnHtml = '';
+            if (type === 'カスタム') {
+                deleteBtnHtml = `<button class="btn-danger" onclick="deleteChapter('${ch.id}')">削除</button>`;
+            }
+
+            box.innerHTML = `
+                <div class="chapter-header">
+                    <span class="chapter-title">【${ch.name}】</span>
+                    <div>
+                        <span style="font-size:0.85rem; color:var(--text-muted)">想定文字数: </span>
+                        <input type="text" class="input-inline" placeholder="例: 2000字" value="${ch.chars}" oninput="updateCharCount('${ch.id}', this.value)">
+                        ${deleteBtnHtml}
+                    </div>
+                </div>
+            `;
+            container.appendChild(box);
+        });
+    }
+
+    function addElement() {
+        const input = document.getElementById('element-text');
+        const text = input.value.trim();
+        const isStar = document.getElementById('is-star').checked;
+        const isHeart = document.getElementById('is-heart').checked;
+
+        if (!text) {
+            alert('要素の内容を入力してください！');
+            return;
+        }
+
+        const newElement = {
+            id: 'el_' + Date.now(),
+            text,
+            isStar,
+            isHeart,
+            chapterId: '' 
+        };
+
+        elements.push(newElement);
+
+        input.value = '';
+        document.getElementById('is-star').checked = false;
+        document.getElementById('is-heart').checked = false;
+
+        renderElements();
+    }
+
+    function deleteElement(id) {
+        elements = elements.filter(el => el.id !== id);
+        renderElements();
+    }
+
+    function moveElementToChapter(elId, chapterId) {
+        const el = elements.find(e => e.id === elId);
+        if (el) {
+            el.chapterId = chapterId;
+            renderElements();
+        }
+    }
+
+    function moveOrder(id, direction) {
+        const index = elements.findIndex(el => el.id === id);
+        if (index === -1) return;
+
+        const currentEl = elements[index];
+        const sameGroupElements = elements.filter(el => el.chapterId === currentEl.chapterId);
+        const groupIndex = sameGroupElements.findIndex(el => el.id === id);
+
+        if (direction === 'up' && groupIndex > 0) {
+            const targetEl = sameGroupElements[groupIndex - 1];
+            const targetGlobalIndex = elements.findIndex(el => el.id === targetEl.id);
+            elements[index] = targetEl;
+            elements[targetGlobalIndex] = currentEl;
+        } else if (direction === 'down' && groupIndex < sameGroupElements.length - 1) {
+            const targetEl = sameGroupElements[groupIndex + 1];
+            const targetGlobalIndex = elements.findIndex(el => el.id === targetEl.id);
+            elements[index] = targetEl;
+            elements[targetGlobalIndex] = currentEl;
+        }
+
+        renderElements();
+    }
+
+    function renderElements() {
+        const container = document.getElementById('elements-list');
+        container.innerHTML = '';
+
+        if (elements.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:0.9rem;">まだ要素がありません。上のフォームから平打ち入力してください。</p>';
+            return;
+        }
+
+        elements.forEach(el => {
+            const item = document.createElement('div');
+            item.className = 'element-item';
+
+            let prefix = '';
+            if (el.isStar) prefix += '<span class="tag-star">⭐</span> ';
+            if (el.isHeart) prefix += '<span class="tag-heart">♡</span> ';
+
+            let optionsHtml = `<option value="">(未分類/平打ち)</option>`;
+            chapters.forEach(ch => {
+                const selected = el.chapterId === ch.id ? 'selected' : '';
+                optionsHtml += `<option value="${ch.id}" ${selected}>${ch.name}</option>`;
+            });
+
+            item.innerHTML = `
+                <div class="element-content">
+                    ${prefix}${el.text}
+                </div>
+                <div class="element-actions">
+                    <select onchange="moveElementToChapter('${el.id}', this.value)">
+                        ${optionsHtml}
+                    </select>
+                    <button class="order-btn" onclick="moveOrder('${el.id}', 'up')">🔼</button>
+                    <button class="order-btn" onclick="moveOrder('${el.id}', 'down')">🔽</button>
+                    <button class="btn-danger" onclick="deleteElement('${el.id}')">×</button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function generatePlot() {
+        let outputText = "";
+
+        chapters.forEach(ch => {
+            const targetChars = ch.chars ? `（目標：${ch.chars}）` : '';
+            outputText += `**【${ch.name}】${targetChars}**\n`;
+
+            const chElements = elements.filter(el => el.chapterId === ch.id);
+
+            if (chElements.length === 0) {
+                outputText += `（要素が配置されていません）\n`;
+            } else {
+                chElements.forEach(el => {
+                    let elLine = "・";
+                    if (el.isStar) elLine += "⭐";
+                    if (el.isHeart) elLine += "♡";
+                    elLine += el.text;
+                    outputText += `${elLine}\n`;
+                });
+            }
+            outputText += `\n`;
+        });
+
+        const unassignedElements = elements.filter(el => !el.chapterId);
+        if (unassignedElements.length > 0) {
+            outputText += `**【未分類・メモ】**\n`;
+            unassignedElements.forEach(el => {
+                let elLine = "・";
+                if (el.isStar) elLine += "⭐";
+                if (el.isHeart) elLine += "♡";
+                elLine += el.text;
+                outputText += `${elLine}\n`;
+            });
+            outputText += `\n`;
+        }
+
+        document.getElementById('plot-output').value = outputText.trim();
+    }
+
+    function downloadPlotText() {
+        const text = document.getElementById('plot-output').value;
+        if (!text) {
+            alert('先に「プロット錬成」ボタンを押して、テキストを出力してね！');
+            return;
+        }
+
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        const today = new Date().toISOString().slice(0, 10);
+        a.download = `plot_錬成結果_${today}.txt`;
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>
